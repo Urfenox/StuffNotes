@@ -46,6 +46,9 @@
   <PropertyGroup>
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>StuffNotes.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -73,17 +76,11 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AbrirNota.Designer.vb">
-      <DependentUpon>AbrirNota.vb</DependentUpon>
-    </Compile>
-    <Compile Include="AbrirNota.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Complementos.vb" />
-    <Compile Include="CrearNota.Designer.vb">
-      <DependentUpon>CrearNota.vb</DependentUpon>
+    <Compile Include="Nota.Designer.vb">
+      <DependentUpon>Nota.vb</DependentUpon>
     </Compile>
-    <Compile Include="CrearNota.vb">
+    <Compile Include="Nota.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Inicializador.Designer.vb">
@@ -116,11 +113,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="AbrirNota.resx">
-      <DependentUpon>AbrirNota.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CrearNota.resx">
-      <DependentUpon>CrearNota.vb</DependentUpon>
+    <EmbeddedResource Include="Nota.resx">
+      <DependentUpon>Nota.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Inicializador.resx">
       <DependentUpon>Inicializador.vb</DependentUpon>
@@ -146,6 +140,9 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="StuffNotes.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>
