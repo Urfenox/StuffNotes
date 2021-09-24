@@ -1,10 +1,69 @@
 ﻿Imports Microsoft.Win32
 Module Complementos
-
     Public DIRCommons As String = "C:\Users\" & Environment.UserName & "\AppData\Local\CRZ_Labs\StuffNotes"
     Public FileWithNoteList As String = DIRCommons & "\StuffWithNotes.lst"
     Public DIRNotas As String = DIRCommons & "\Notas"
-    Public CosasConNotas As New ArrayList
+    Public StuffWithNotes As New ArrayList
+
+    Sub CommonLoad()
+        Try
+            If My.Computer.FileSystem.DirectoryExists(DIRCommons) = False Then
+                My.Computer.FileSystem.CreateDirectory(DIRCommons)
+            End If
+            If My.Computer.FileSystem.DirectoryExists(DIRNotas) = False Then
+                My.Computer.FileSystem.CreateDirectory(DIRNotas)
+            End If
+            If My.Computer.FileSystem.FileExists(FileWithNoteList) = False Then
+                My.Computer.FileSystem.WriteAllText(FileWithNoteList, "# Lista de ficheros/carpetas con notas asociadas", False)
+            End If
+            LoadFileWithNote()
+        Catch ex As Exception
+            AddToLog("CommonStart(0)", "Error: " & ex.Message, True)
+        End Try
+        Try
+            Dim RutaMenu As String = "SOFTWARE\Classes\Directory\shell\StuffNotes"
+            Dim RegeditWriter As RegistryKey
+            RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu, True)
+            If RegeditWriter Is Nothing Then
+                Main.btnEnableDisableStuffNotes.Text = "Habilitar StuffNotes"
+            Else
+                Main.btnEnableDisableStuffNotes.Text = "Deshabilitar StuffNotes"
+            End If
+        Catch ex As Exception
+            AddToLog("CommonStart(1)", "Error: " & ex.Message, True)
+        End Try
+    End Sub
+
+    Sub SaveFileWithNote()
+        Try
+            Dim lineas As String = "# Lista de ficheros/carpetas con notas asociadas"
+            For Each item As String In StuffWithNotes
+                lineas = lineas & vbCrLf & item
+            Next
+            If My.Computer.FileSystem.FileExists(FileWithNoteList) = True Then
+                My.Computer.FileSystem.DeleteFile(FileWithNoteList)
+            End If
+            My.Computer.FileSystem.WriteAllText(FileWithNoteList, lineas, False)
+        Catch ex As Exception
+            AddToLog("SaveFileWithNote", "Error: " & ex.Message, True)
+        End Try
+    End Sub
+
+    Sub LoadFileWithNote()
+        Try
+            StuffWithNotes.Clear()
+            Main.ListBox1.Items.Clear()
+            For Each linea As String In IO.File.ReadLines(FileWithNoteList)
+                If linea <> Nothing And linea.StartsWith("#") = False Then
+                    StuffWithNotes.Add(linea)
+                    Dim getPath As String() = linea.Split("|")
+                    Main.ListBox1.Items.Add(getPath(0).Remove(0, getPath(0).LastIndexOf("\") + 1))
+                End If
+            Next
+        Catch ex As Exception
+            AddToLog("LoadFileWithNote", "Error: " & ex.Message, True)
+        End Try
+    End Sub
 
     Sub AddToLog(ByVal from As String, ByVal content As String, Optional ByVal flag As Boolean = False)
         Try
@@ -17,9 +76,9 @@ Module Complementos
             Dim Message As String = DateTime.Now.ToString("hh:mm:ss tt dd/MM/yyyy ") & from & " " & finalContent
             Console.WriteLine(Message)
             Try
-                    My.Computer.FileSystem.WriteAllText(DIRCommons & "\Activity.log", vbCrLf & Message, True)
-                Catch
-                End Try
+                My.Computer.FileSystem.WriteAllText(DIRCommons & "\Activity.log", vbCrLf & Message, True)
+            Catch
+            End Try
         Catch ex As Exception
             Console.WriteLine("[AddToLog@Complementos]Error: " & ex.Message)
         End Try
@@ -36,48 +95,17 @@ Module RegistroDeWindows
                 Registry.CurrentUser.CreateSubKey(RutaMenu)
                 RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu, True)
             End If
+            RegeditWriter.SetValue("", "Stuff Notes", RegistryValueKind.String)
             RegeditWriter.SetValue("Icon", Application.ExecutablePath, RegistryValueKind.String)
-            RegeditWriter.SetValue("MUIVerb", "Stuff Notes", RegistryValueKind.String)
-            RegeditWriter.SetValue("subcommands", "", RegistryValueKind.String) 'Nothing creo genera errores, deberia ser "" en el caso.
 
-            RutaMenu &= "\shell"
+            'Creacion del comando
+            RutaMenu &= "\command"
             RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu, True)
             If RegeditWriter Is Nothing Then
                 Registry.CurrentUser.CreateSubKey(RutaMenu)
                 RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu, True)
             End If
-
-            'Creacion de las opciones que seran visibles dentro de 'Stuff Notes'
-            RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\AddNote", True)
-            If RegeditWriter Is Nothing Then
-                Registry.CurrentUser.CreateSubKey(RutaMenu & "\AddNote")
-                RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\AddNote", True)
-            End If
-            RegeditWriter.SetValue("", "Agregar Nota", RegistryValueKind.String)
-            RegeditWriter.SetValue("Icon", Application.ExecutablePath, RegistryValueKind.String)
-            RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\SeeNote", True)
-            If RegeditWriter Is Nothing Then
-                Registry.CurrentUser.CreateSubKey(RutaMenu & "\SeeNote")
-                RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\SeeNote", True)
-            End If
-            RegeditWriter.SetValue("", "Ver Nota", RegistryValueKind.String)
-            RegeditWriter.SetValue("Icon", Application.ExecutablePath, RegistryValueKind.String)
-
-            'Creacion de la subllave command y creacion de acciones
-            RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\AddNote\command", True)
-            If RegeditWriter Is Nothing Then
-                Registry.CurrentUser.CreateSubKey(RutaMenu & "\AddNote\command")
-                RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\AddNote\command", True)
-            End If
-            RegeditWriter.SetValue("", """" & Application.ExecutablePath & """" & "Create|%V", RegistryValueKind.String)
-
-            RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\SeeNote\command", True)
-            If RegeditWriter Is Nothing Then
-                Registry.CurrentUser.CreateSubKey(RutaMenu & "\SeeNote\command")
-                RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\SeeNote\command", True)
-            End If
-            RegeditWriter.SetValue("", """" & Application.ExecutablePath & """" & "Open|%V", RegistryValueKind.String)
-
+            RegeditWriter.SetValue("", """" & Application.ExecutablePath & """" & "Note|%V", RegistryValueKind.String)
         Catch ex As Exception
             AddToLog("CrearMenus(Folder)", "Error: " & ex.Message, True)
         End Try
@@ -89,48 +117,17 @@ Module RegistroDeWindows
                 Registry.CurrentUser.CreateSubKey(RutaMenu)
                 RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu, True)
             End If
+            RegeditWriter.SetValue("", "Stuff Notes", RegistryValueKind.String)
             RegeditWriter.SetValue("Icon", Application.ExecutablePath, RegistryValueKind.String)
-            RegeditWriter.SetValue("MUIVerb", "Stuff Notes", RegistryValueKind.String)
-            RegeditWriter.SetValue("subcommands", "", RegistryValueKind.String) 'Nothing creo genera errores, deberia ser "" en el caso.
 
-            RutaMenu &= "\shell"
+            'Creacion del comando
+            RutaMenu &= "\command"
             RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu, True)
             If RegeditWriter Is Nothing Then
                 Registry.CurrentUser.CreateSubKey(RutaMenu)
                 RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu, True)
             End If
-
-            'Creacion de las opciones que seran visibles dentro de 'Stuff Notes'
-            RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\AddNote", True)
-            If RegeditWriter Is Nothing Then
-                Registry.CurrentUser.CreateSubKey(RutaMenu & "\AddNote")
-                RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\AddNote", True)
-            End If
-            RegeditWriter.SetValue("", "Agregar Nota", RegistryValueKind.String)
-            RegeditWriter.SetValue("Icon", Application.ExecutablePath, RegistryValueKind.String)
-            RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\SeeNote", True)
-            If RegeditWriter Is Nothing Then
-                Registry.CurrentUser.CreateSubKey(RutaMenu & "\SeeNote")
-                RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\SeeNote", True)
-            End If
-            RegeditWriter.SetValue("", "Ver Nota", RegistryValueKind.String)
-            RegeditWriter.SetValue("Icon", Application.ExecutablePath, RegistryValueKind.String)
-
-            'Creacion de la subllave command y creacion de acciones
-            RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\AddNote\command", True)
-            If RegeditWriter Is Nothing Then
-                Registry.CurrentUser.CreateSubKey(RutaMenu & "\AddNote\command")
-                RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\AddNote\command", True)
-            End If
-            RegeditWriter.SetValue("", """" & Application.ExecutablePath & """" & "Create|%V", RegistryValueKind.String)
-
-            RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\SeeNote\command", True)
-            If RegeditWriter Is Nothing Then
-                Registry.CurrentUser.CreateSubKey(RutaMenu & "\SeeNote\command")
-                RegeditWriter = Registry.CurrentUser.OpenSubKey(RutaMenu & "\SeeNote\command", True)
-            End If
-            RegeditWriter.SetValue("", """" & Application.ExecutablePath & """" & "Open|%V", RegistryValueKind.String)
-
+            RegeditWriter.SetValue("", """" & Application.ExecutablePath & """" & "Note|%V", RegistryValueKind.String)
         Catch ex As Exception
             AddToLog("CrearMenus(File)", "Error: " & ex.Message, True)
         End Try

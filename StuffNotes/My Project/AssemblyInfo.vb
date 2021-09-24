@@ -9,8 +9,8 @@ Imports System.Runtime.InteropServices
 
 ' Revisar los valores de los atributos del ensamblado
 
-<Assembly: AssemblyTitle("Administrador de notas de escritorio")>
-<Assembly: AssemblyDescription("Revisa y Crea notas para tus archivos y/o carpetas")>
+<Assembly: AssemblyTitle("Administrador de notas para archivos y capetas")>
+<Assembly: AssemblyDescription("Crea y visualiza notas para tus archivos y/o carpetas")>
 <Assembly: AssemblyCompany("Urfenox")>
 <Assembly: AssemblyProduct("StuffNotes")>
 <Assembly: AssemblyCopyright("")>
@@ -33,5 +33,5 @@ Imports System.Runtime.InteropServices
 ' <Assembly: AssemblyVersion("1.0.*")>
 
 <Assembly: AssemblyVersion("1.0.0.0")>
-<Assembly: AssemblyFileVersion("1.0.0.0")>
+<Assembly: AssemblyFileVersion("24.09.20.21")>
 <Assembly: NeutralResourcesLanguage("es")>
